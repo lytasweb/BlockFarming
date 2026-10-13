@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BlockFarming — Live Demo</title>
+<link rel="stylesheet" href="/styles.css" />
+<style>
+  [hidden] { display: none !important; }
+  body { background: radial-gradient(1200px 500px at 10% -10%, rgba(34,197,94,.10), transparent 60%), var(--bg); min-height: 100vh; }
+  .dh { position: sticky; top: 0; z-index: 20; background: rgba(9,15,27,.88); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
+  .dh-in { max-width: 1680px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+  .dh .brand .logo { width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #22c55e, #15803d); display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 6px 18px rgba(34,197,94,.35); }
+  .dh .brand small { color: var(--muted); }
+  .live-tag { font-size: 11px; font-weight: 700; color: #86efac; border: 1px solid #14532d; background: #052e1a; border-radius: 99px; padding: 3px 10px; letter-spacing: .5px; }
+  .live-tag::before { content: '●'; margin-right: 6px; animation: pulse 1.6s infinite; }
+  .view-tabs { display: flex; gap: 4px; background: var(--panel2); border: 1px solid var(--line); border-radius: 11px; padding: 4px; }
+  .view-tabs button { border: 0; background: transparent; color: var(--muted); font: 600 13px inherit; padding: 7px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+  .view-tabs button.active { background: var(--green2); color: #fff; }
+  .live-dot { width: 7px; height: 7px; border-radius: 50%; background: #86efac; animation: pulse 1.6s infinite; }
+  .arch { max-width: 1680px; margin: 0 auto; padding: 20px; }
+  .arch-head h2 { margin: 0 0 4px; font-size: 20px; } .arch-head p { margin: 0 0 14px; font-size: 13.5px; }
+  .diagram-card { padding: 20px; min-height: 420px; }
+  .status-strip { display: flex; gap: 6px; flex-wrap: wrap; margin-left: auto; }
+  .dh-links { display: flex; gap: 8px; }
+  .dh-links a { text-decoration: none; font-size: 13px; font-weight: 600; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--line); color: var(--text); white-space: nowrap; }
+  .dh-links a.primary { background: var(--green2); border-color: var(--green2); color: #fff; }
+  .dh-links a:hover { filter: brightness(1.15); }
+
+  .stage { max-width: 1680px; margin: 0 auto; padding: 20px; display: grid; grid-template-columns: 330px minmax(0, 1fr) 400px; gap: 18px; align-items: start; }
+  .panel { background: linear-gradient(180deg, #121b2e, #0f1728); border: 1px solid var(--line); border-radius: 16px; padding: 18px; min-width: 0; }
+  .panel-h { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+  .panel-h .num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px; background: #052e1a; border: 1px solid #14532d; color: #86efac; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .panel-h h2 { margin: 0; font-size: 15.5px; } .panel-h p { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  .panel-h .grow { flex: 1; min-width: 0; }
+  .sticky { position: sticky; top: 76px; }
+
+  .phone-settings select { width: 100%; max-width: 190px; }
+  .bags { max-height: calc(100vh - 260px); min-height: 420px; }
+  .bag-tools { justify-content: space-between; }
+  .feed { max-height: calc(100vh - 560px); min-height: 220px; }
+  .hint { display: flex; gap: 8px; font-size: 12px; color: var(--muted); background: var(--panel2); border: 1px dashed var(--line); border-radius: 10px; padding: 9px 11px; margin-bottom: 12px; line-height: 1.45; }
+
+  @media (max-width: 1360px) {
+    .stage { grid-template-columns: 330px minmax(0, 1fr); }
+    .flow-col { grid-column: 1 / -1; } .sticky { position: static; }
+    .flow-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; } .feed { max-height: 360px; }
+  }
+  @media (max-width: 900px) {
+    .stage { grid-template-columns: minmax(0, 1fr); padding: 14px; gap: 14px; }
+    .flow-inner { grid-template-columns: 1fr; }
+    .bags { max-height: 560px; min-height: 0; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); }
+    .status-strip { order: 3; width: 100%; margin-left: 0; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 2px; }
+    .dh-links { margin-left: auto; }
+    .arch { padding: 14px; } .arch-nav { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; } .arch-nav .btn { white-space: nowrap; }
+  }
+  @media (max-width: 520px) {
+    .dh-in { padding: 10px 14px; gap: 10px; } .dh .brand small { display: none; } .view-tabs { order: 4; width: 100%; } .view-tabs button { flex: 1; justify-content: center; }
+    .dh-links a { padding: 7px 9px; font-size: 12px; }
+    .phone { width: 100%; max-width: 260px; }
+    .bags { grid-template-columns: 1fr 1fr; gap: 8px; } .bag { padding: 8px; font-size: 11px; }
+    .scratch { font-size: 11px; letter-spacing: 0; }
+    .panel { padding: 14px; border-radius: 14px; }
+  }
+</style>
+</head>
+<body>
+<header class="dh"><div class="dh-in">
+  <div class="brand"><span class="logo">🌾</span><div><b>BlockFarming</b><small>Factory-to-farmer fertilizer verification · TFRA</small></div></div>
+  <nav class="view-tabs" id="tabs"><button data-tab="demo" class="active"><span class="live-dot"></span>Live Demo</button><button data-tab="arch">Architecture</button></nav>
+  <div class="status-strip" id="health"></div>
+  <nav class="dh-links">
+    <a href="/farmer.html" target="_blank">👩🏾‍🌾 Farmer page</a>
+    <a href="/portal.html" target="_blank" class="primary">🔐 Dashboards</a>
+  </nav>
+</div></header>
+
+<main class="stage view" id="view-demo">
+  <section class="panel phone-col">
+    <div class="panel-h"><span class="num">1</span><div class="grow"><h2>Farmer's feature phone</h2><p>USSD <b>*150*00#</b> on any network, with no internet.</p></div></div>
+    <div class="phone-settings">
+      <label>Phone <select id="ph-number">
+        <option value="255765000111">Asha (farmer) 0765 000 111</option>
+        <option value="255746000222">Juma (farmer) 0746 000 222</option>
+        <option value="255700000666">Fraudster 0700 000 666</option>
+      </select></label>
+      <label>Network <select id="ph-network">
+        <option value="Vodacom">Vodacom</option><option value="Airtel">Airtel</option><option value="Yas">Yas (Mixx)</option><option value="Halotel">Halotel</option>
+      </select></label>
+      <label>Cell tower <select id="ph-cell">
+        <option value="MOR-0412">Morogoro town (MOR-0412)</option>
+        <option value="MBY-0098">Mbeya Uyole (MBY-0098)</option>
+        <option value="DSM-0007">Dar es Salaam (DSM-0007)</option>
+        <option value="DOD-0050">Dodoma (DOD-0050)</option>
+      </select></label>
+      <label class="chk"><input type="checkbox" id="ph-drop" /> Simulate congested network (USSD drop)</label>
+    </div>
+    <div class="phone">
+      <div class="phone-brand">kitochi</div>
+      <div class="screen"><div class="sbar"><span id="ph-net">Vodacom</span><span>▂▄▆ 🔋</span></div><div id="screen-text"></div><div id="screen-input"></div></div>
+      <div class="softkeys"><button id="k-call" class="call">OK</button><button id="k-clear">C</button><button id="k-end" class="end">✕</button></div>
+      <div class="keypad" id="keypad"></div>
+    </div>
+    <div class="phone-actions">
+      <button class="btn" id="btn-dial">Dial *150*00#</button>
+      <button class="btn ghost" id="btn-sms">Send as SMS to 15000</button>
+    </div>
+    <h4>SMS inbox <small id="inbox-who"></small></h4>
+    <div id="inbox" class="inbox"></div>
+  </section>
+
+  <section class="panel bags-col">
+    <div class="panel-h"><span class="num">2</span><div class="grow"><h2>Fertilizer bags · scratch labels</h2><p>Codes come from the secure print run. The platform stores only keyed SHA-256 hashes.</p></div>
+      <select id="bag-filter"><option value="">All holders</option></select></div>
+    <div class="hint">💡 <span><b>Scratch</b> = the farmer at the shop. <b>Peel</b> = a fraudster harvesting the code early: the void label shows the tampering. <b>Verify on phone</b> types the code; press the green <b>OK</b> key.</span></div>
+    <div class="bag-tools"><button class="btn small danger" id="btn-fake">Generate counterfeit code</button><span id="fake-code" class="mono"></span></div>
+    <div id="bags" class="bags"></div>
+  </section>
+
+  <section class="panel flow-col sticky">
+    <div class="panel-h"><span class="num">3</span><div class="grow"><h2>What the platform is doing</h2><p>Fast answer to the farmer, then ledger + payout in the background.</p></div></div>
+    <div class="flow-inner">
+      <div id="pipeline"></div>
+      <div><h4 style="margin-top:0">Live activity</h4><div id="feed" class="feed"></div></div>
+    </div>
+  </section>
+</main>
+
+<main class="arch view" id="view-arch" hidden>
+  <div class="arch-head">
+    <div><h2>System architecture</h2><p class="muted">How BlockFarming connects factories, distributors, dealers, farmers, the ledger, mobile money and TFRA, including the answers to the judges' feedback.</p></div>
+  </div>
+  <div class="arch-nav">
+    <button class="btn small" data-d="d-arch">System architecture</button>
+    <button class="btn small ghost" data-d="d-verify">USSD verify + async settlement</button>
+    <button class="btn small ghost" data-d="d-redund">Telecom redundancy</button>
+    <button class="btn small ghost" data-d="d-tfra">TFRA / Ruzuku integration</button>
+    <button class="btn small ghost" data-d="d-tamper">Void label + single-use code</button>
+    <button class="btn small ghost" data-d="d-states">Token &amp; settlement states</button>
+  </div>
+  <div class="card diagram-card"><div id="diagram"><div class="muted">Loading diagram…</div></div></div>
+</main>
+
+<div id="toast"></div>
+<script src="/vendor/mermaid.min.js"></script>
+<script src="/diagrams.js"></script>
+<script src="/demo.js"></script>
+</body>
+</html>

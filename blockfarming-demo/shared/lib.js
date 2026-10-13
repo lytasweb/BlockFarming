@@ -6,10 +6,10 @@ const fs = require('fs');
 const path = require('path');
 
 const PORTS = {
-  platform: +process.env.PLATFORM_PORT || 3000,
-  chain: +process.env.CHAIN_PORT || 8899,
-  mno: +process.env.MNO_PORT || 4000,
-  tfra: +process.env.TFRA_PORT || 5000,
+  platform: +process.env.PLATFORM_PORT || 7070,
+  chain: +process.env.CHAIN_PORT || 7071,
+  mno: +process.env.MNO_PORT || 7072,
+  tfra: +process.env.TFRA_PORT || 7073,
 };
 const URLS = {
   platform: `http://127.0.0.1:${PORTS.platform}`,

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hakiki Mbolea — BlockFarming</title>
+<style>
+  :root { --g: #15803d; --g2: #166534; --bg: #f4f7f2; --ink: #142014; --muted: #5b6b5b; --line: #d9e3d6; --red: #b91c1c; --amber: #b45309; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { background: linear-gradient(135deg, #166534, #14532d); color: #fff; padding: 22px 18px 26px; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 0 16px; }
+  header .top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  header .logo { font-weight: 800; font-size: 19px; } header a { color: #bbf7d0; font-size: 13px; text-decoration: none; border: 1px solid rgba(255,255,255,.3); padding: 6px 10px; border-radius: 8px; }
+  header h1 { margin: 18px 0 6px; font-size: 26px; line-height: 1.2; } header p { margin: 0; color: #dcfce7; }
+  .ussd { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+  .ussd div { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); border-radius: 12px; padding: 10px 14px; }
+  .ussd b { display: block; font-size: 22px; letter-spacing: 1px; } .ussd small { color: #dcfce7; }
+  main { margin-top: -14px; }
+  .card { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; margin-bottom: 14px; box-shadow: 0 4px 14px rgba(20,40,20,.05); }
+  .card h2 { margin: 0 0 4px; font-size: 18px; } .card .sub { color: var(--muted); font-size: 14px; margin: 0 0 14px; }
+  label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin: 10px 0 5px; }
+  input { width: 100%; font: inherit; padding: 13px 14px; border: 1.5px solid var(--line); border-radius: 10px; background: #fbfdfb; }
+  input:focus { outline: none; border-color: var(--g); }
+  input.code { font: 700 22px/1 ui-monospace, Consolas, monospace; letter-spacing: 3px; text-align: center; }
+  button { width: 100%; margin-top: 14px; font: 700 16px inherit; padding: 14px; border: 0; border-radius: 10px; background: var(--g); color: #fff; cursor: pointer; }
+  button.alt { background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+  .result { margin-top: 14px; border-radius: 12px; padding: 16px; white-space: pre-line; font-weight: 600; }
+  .result:empty { display: none; }
+  .r-ok { background: #dcfce7; border: 2px solid #16a34a; color: #14532d; }
+  .r-bad { background: #fee2e2; border: 2px solid var(--red); color: #7f1d1d; }
+  .r-warn { background: #fef3c7; border: 2px solid #d97706; color: #78350f; }
+  .r-ok .big, .r-bad .big, .r-warn .big { font-size: 22px; font-weight: 800; display: block; margin-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; } td { padding: 10px 4px; border-bottom: 1px solid var(--line); } td:last-child { text-align: right; font-weight: 800; }
+  .steps { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; counter-reset: s; }
+  .steps li { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; }
+  .steps li::before { counter-increment: s; content: counter(s); width: 28px; height: 28px; border-radius: 50%; background: var(--g); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; }
+  .void { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 6px 0 12px; }
+  .void div { border-radius: 10px; padding: 10px; text-align: center; font-size: 13px; font-weight: 600; }
+  .void .good { background: repeating-linear-gradient(45deg, #fff, #fff 6px, #ecfdf5 6px, #ecfdf5 12px); border: 1.5px dashed #16a34a; }
+  .void .badl { background: repeating-linear-gradient(-30deg, #fee2e2, #fee2e2 8px, #fff 8px, #fff 16px); border: 1.5px solid var(--red); color: var(--red); }
+  .void .badl b { display: block; font-size: 20px; letter-spacing: 2px; }
+  .tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px; }
+  .tabs button { margin: 0; padding: 10px 4px; font-size: 13px; background: #fff; color: var(--ink); border: 1.5px solid var(--line); }
+  .tabs button.on { background: var(--g); color: #fff; border-color: var(--g); }
+  .pane { display: none; } .pane.on { display: block; }
+  footer { text-align: center; color: var(--muted); font-size: 13px; padding: 20px 16px 40px; }
+  @media (max-width: 480px) { .tabs { grid-template-columns: 1fr 1fr; } header h1 { font-size: 22px; } }
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <div class="top"><span class="logo">🌾 BlockFarming</span><a href="/portal.html">Staff sign in →</a></div>
+  <h1>Hakiki mbolea kabla ya kulipa<br><small style="font-weight:400;font-size:.7em">Verify your fertilizer before you pay</small></h1>
+  <p>Free for every farmer. No account needed. Works on any phone.</p>
+  <div class="ussd">
+    <div><small>Any phone (kitochi)</small><b>*150*00#</b></div>
+    <div><small>SMS the code to</small><b>15000</b></div>
+    <div><small>Help line (free)</small><b>0800 110 042</b></div>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <div class="tabs">
+    <button class="on" data-p="verify">✔ Hakiki / Verify</button>
+    <button data-p="prices">Bei / Prices</button>
+    <button data-p="report">⚠ Ripoti / Report</button>
+    <button data-p="ref">Ref status</button>
+  </div>
+
+  <section class="pane on" id="p-verify">
+    <div class="card">
+      <h2>Verify a bag</h2>
+      <p class="sub">Check the label first. If it shows <b>VOID</b>, do not buy, and report it instead.</p>
+      <div class="void"><div class="good">✓ Label intact<br>scratch &amp; verify</div><div class="badl"><b>VOID</b>label was peeled<br>do NOT buy</div></div>
+      <form id="f-verify">
+        <label>Your mobile number (receipt by SMS)</label>
+        <input name="phone" inputmode="tel" placeholder="0765 000 111" required />
+        <label>12-digit code under the scratch panel</label>
+        <input name="code" class="code" inputmode="numeric" placeholder="0000 0000 0000" maxlength="14" required />
+        <button>Verify now · Hakiki sasa</button>
+      </form>
+      <div id="r-verify" class="result"></div>
+    </div>
+    <div class="card">
+      <h2>How it works</h2>
+      <ol class="steps">
+        <li><span>At the shop, check the label is <b>intact</b> (no VOID marks).</span></li>
+        <li><span>Scratch the silver panel <b>in front of the seller</b>.</span></li>
+        <li><span>Dial <b>*150*00#</b>, choose 1, and enter the 12 digits. You can also SMS the code to 15000 or use this page.</span></li>
+        <li><span><b>GENUINE</b>? Pay no more than the price shown. Keep the SMS receipt. The code now works only once.</span></li>
+        <li><span><b>FAKE / ALREADY USED / EXPIRED</b>? Do not pay, and report it.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="pane" id="p-prices">
+    <div class="card">
+      <h2>Official maximum prices (TFRA)</h2>
+      <p class="sub" id="price-date">Subsidised price per 50 kg bag. Never pay more.</p>
+      <table id="prices"></table>
+    </div>
+  </section>
+
+  <section class="pane" id="p-report">
+    <div class="card">
+      <h2>Report a VOID or broken label</h2>
+      <p class="sub">The bag number is printed next to the label (e.g. MM26001-0007). The bag is blocked immediately and TFRA inspectors are notified.</p>
+      <form id="f-report">
+        <label>Bag number</label>
+        <input name="bag" placeholder="MM26001-0007" required style="text-transform:uppercase" />
+        <label>Your mobile number (optional)</label>
+        <input name="phone" inputmode="tel" placeholder="0765 000 111" />
+        <button>Send report · Tuma ripoti</button>
+      </form>
+      <div id="r-report" class="result"></div>
+    </div>
+  </section>
+
+  <section class="pane" id="p-ref">
+    <div class="card">
+      <h2>Check a verification reference</h2>
+      <p class="sub">Use the ref on your receipt (e.g. BF-1A2B3C) to confirm the sale was recorded on the ledger.</p>
+      <form id="f-ref">
+        <label>Reference</label>
+        <input name="ref" placeholder="BF-1A2B3C" required style="text-transform:uppercase" />
+        <button>Check · Angalia</button>
+      </form>
+      <div id="r-ref" class="result"></div>
+    </div>
+  </section>
+</main>
+<footer>Tanzania Fertilizer Regulatory Authority · BlockFarming verification service<br>Your number is used only for your receipt and is stored anonymised.</footer>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+document.querySelectorAll('.tabs button').forEach((b) => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === b));
+  document.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.id === 'p-' + b.dataset.p));
+  if (b.dataset.p === 'prices') loadPrices();
+});
+async function call(method, url, body) {
+  const r = await fetch(url, body ? { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) } : {});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || 'Service busy — use *150*00#');
+  return d;
+}
+function show(el, cls, title, text) { el.className = 'result ' + cls; el.innerHTML = `<span class="big">${esc(title)}</span>${esc(text)}`; }
+const form = (f) => Object.fromEntries(new FormData(f));
+
+$('[name=code]').addEventListener('input', (e) => { const d = e.target.value.replace(/\D/g, '').slice(0, 12); e.target.value = d.replace(/(\d{4})(?=\d)/g, '$1 '); });
+
+$('#f-verify').onsubmit = async (e) => {
+  e.preventDefault();
+  const el = $('#r-verify');
+  try {
+    const r = await call('POST', '/api/public/verify', form(e.target));
+    const map = {
+      GENUINE: ['r-ok', '✓ GENUINE · HALISI'], ALREADY_VERIFIED_BY_YOU: ['r-ok', '✓ Already verified by you'],
+      COUNTERFEIT: ['r-bad', '✗ FAKE · BANDIA'], ALREADY_USED: ['r-bad', '✗ CODE ALREADY USED'], TAMPER_FLAGGED: ['r-bad', '✗ BAG REPORTED'],
+      EXPIRED: ['r-warn', '⚠ EXPIRED'], TYPO: ['r-warn', '⚠ Check the code'], RATE_LIMITED: ['r-warn', '⚠ Too many attempts'],
+    }[r.outcome] || ['r-warn', r.outcome];
+    show(el, map[0], map[1], r.message + (r.outcome === 'GENUINE' ? '\n\nA receipt was sent to your phone by SMS.' : ''));
+  } catch (err) { show(el, 'r-warn', '⚠', err.message); }
+};
+$('#f-report').onsubmit = async (e) => {
+  e.preventDefault();
+  try { const r = await call('POST', '/api/public/report', form(e.target)); show($('#r-report'), r.outcome === 'REPORTED' ? 'r-ok' : 'r-warn', r.outcome === 'REPORTED' ? '✓ Report received' : '⚠', r.message); }
+  catch (err) { show($('#r-report'), 'r-warn', '⚠', err.message); }
+};
+$('#f-ref').onsubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const r = await call('GET', '/api/public/ref/' + encodeURIComponent(form(e.target).ref.trim().toUpperCase()));
+    show($('#r-ref'), 'r-ok', '✓ ' + r.ref, `Bag ${r.bag} · ${r.product}\nVerified ${new Date(r.verified_at).toLocaleString()}\nDealer: ${r.dealer || 'being confirmed'}\nLedger block: ${r.ledger_block ?? 'pending'}\nStatus: ${r.state}`);
+  } catch (err) { show($('#r-ref'), 'r-bad', '✗ Not found', err.message); }
+};
+async function loadPrices() {
+  const r = await call('GET', '/api/public/prices');
+  $('#prices').innerHTML = r.products.map((p) => `<tr><td>${esc(p.name)}</td><td>TZS ${Number(p.price_ceiling).toLocaleString()}</td></tr>`).join('');
+  $('#price-date').textContent = 'Subsidised price per 50 kg bag, from the TFRA registry (updated ' + new Date(r.updated).toLocaleString() + '). Never pay more.';
+}
+</script>
+</body>
+</html>

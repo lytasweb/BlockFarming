@@ -1,0 +1,11 @@
+{
+  "name": "blockfarming-demo",
+  "version": "2.0.0",
+  "description": "BlockFarming: blockchain-backed fertilizer verification over USSD with automated mobile-money subsidy settlement",
+  "private": true,
+  "scripts": {
+    "start": "node start.js",
+    "reset": "node start.js --reset"
+  },
+  "engines": { "node": ">=18" }
+}
