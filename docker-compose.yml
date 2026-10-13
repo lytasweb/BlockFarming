@@ -1,0 +1,77 @@
+version: '2.2'
+
+services:
+
+  bf_services:
+    build: ./core/bf-services
+    container_name: bf_services
+    networks:
+      - bf-network
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+      - "3001:3001"
+    depends_on:
+      - bf_infra
+      - bf_blockchain
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://bf_infra:6379
+      - DATABASE_URL=postgresql://blockfarming:blockfarming@bf_infra:5432/blockfarming
+      - BLOCKCHAIN_RPC=http://bf_blockchain:8899
+      - MNO_ADAPTER_URL=http://bf_mno_adapter:4000
+      - USSD_SHORTCODE=*150*00#
+    restart: unless-stopped
+
+  bf_mno_adapter:
+    build: ./adapters/bf-mno-adapter
+    container_name: bf_mno_adapter
+    networks:
+      - bf-network
+    ports:
+      - "4100:4000"
+    environment:
+      - MPESA_API_KEY=test_key
+      - AIRTEL_API_KEY=test_key
+      - TIGO_API_KEY=test_key
+      - HALOPESA_API_KEY=test_key
+    restart: unless-stopped
+
+  bf_blockchain:
+    build: ./core/blockchain-node
+    container_name: bf_blockchain
+    networks:
+      - bf-network
+    ports:
+      - "8900:8899"
+    volumes:
+      - blockchain-data:/ledger
+    restart: unless-stopped
+
+  bf_infra:
+    build: ./infra/bf-infra
+    container_name: bf_infra
+    networks:
+      - bf-network
+    ports:
+      - "5450:5432"
+      - "6390:6379"
+    environment:
+      - POSTGRES_USER=blockfarming
+      - POSTGRES_PASSWORD=blockfarming
+      - POSTGRES_DB=blockfarming
+    volumes:
+      - postgres-data-v2:/var/lib/postgresql/data
+      - redis-data:/data
+      - ./infra/bf-infra/start.sh:/start.sh:ro
+      - ./infra/bf-infra/init.sql:/init.sql:ro
+    restart: unless-stopped
+
+networks:
+  bf-network:
+    driver: bridge
+
+volumes:
+  blockchain-data:
+  postgres-data-v2:
+  redis-data:

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BlockFarming — Regulator Portal</title>
+<script src="/react.production.min.js"></script>
+<script src="/react-dom.production.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  .login-page { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; }
+  .login-left {
+    background: linear-gradient(135deg, #15803d 0%, #166534 50%, #052e16 100%);
+    position: relative; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    padding: 48px; color: white;
+  }
+  .login-left::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle at 25% 25%, rgba(255,255,255,0.10) 0%, transparent 45%), radial-gradient(circle at 75% 75%, rgba(34,197,94,0.30) 0%, transparent 50%); pointer-events: none; }
+  .login-left::after { content: ''; position: absolute; inset: 0; background-image: linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px); background-size: 42px 42px; pointer-events: none; }
+  .visual-content { position: relative; z-index: 2; max-width: 520px; }
+  .visual-badge { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255,255,255,0.10); border: 1px solid rgba(255,255,255,0.20); border-radius: 24px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 28px; }
+  .visual-badge .dot-g { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 8px #22c55e; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .visual-icon { font-size: 68px; margin-bottom: 28px; display: inline-block; filter: drop-shadow(0 10px 30px rgba(0,0,0,0.35)); }
+  .visual-content h2 { font-size: 38px; font-weight: 700; line-height: 1.18; margin-bottom: 20px; }
+  .visual-content p.lede { font-size: 16px; line-height: 1.7; color: rgba(255,255,255,0.85); margin-bottom: 34px; }
+  .feature-list { list-style: none; display: grid; gap: 14px; margin-bottom: 40px; }
+  .feature-list li { display: flex; align-items: flex-start; gap: 12px; font-size: 15px; }
+  .feature-list .check { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.20); display: flex; align-items: center; justify-content: center; font-size: 12px; margin-top: 1px; }
+  .attribution { font-size: 13px; opacity: 0.7; }
+
+  .login-right { background: #0f172a; display: flex; align-items: center; justify-content: center; padding: 48px; position: relative; overflow: hidden; }
+  .login-right::before { content: ''; position: absolute; top: -240px; right: -240px; width: 560px; height: 560px; background: radial-gradient(circle, rgba(34,197,94,0.14), transparent 70%); pointer-events: none; }
+  .login-form-wrap { width: 100%; max-width: 460px; position: relative; z-index: 2; text-align: center; }
+  .login-logo { width: 72px; height: 72px; border-radius: 18px; background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 22px; box-shadow: 0 10px 30px rgba(34,197,94,0.40); }
+  .login-form-wrap h1 { font-size: 26px; color: #f1f5f9; margin-bottom: 8px; font-weight: 700; }
+  .login-form-wrap .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 32px; line-height: 1.5; }
+
+  .field { margin-bottom: 18px; text-align: left; }
+  .field label { display: block; font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; font-weight: 600; }
+  .field input { width: 100%; background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 13px 16px; border-radius: 10px; font-size: 14px; font-family: inherit; }
+  .field input:focus { outline: none; border-color: #16a34a; }
+  .field input.code-input { font-family: monospace; letter-spacing: 8px; text-align: center; font-size: 24px; text-transform: uppercase; font-weight: 700; }
+
+  .btn-primary { width: 100%; background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); color: white; border: none; padding: 14px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 8px; font-family: inherit; box-shadow: 0 6px 20px rgba(34,197,94,0.30); }
+  .btn-primary:hover { transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .btn-secondary { width: 100%; background: transparent; color: #e2e8f0; border: 1px solid #334155; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 10px; }
+  .btn-secondary:hover { background: #1e293b; }
+  .btn-danger { width: 100%; background: transparent; color: #fca5a5; border: 1px solid #7f1d1d; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 10px; }
+  .btn-danger:hover { background: rgba(127,29,29,0.3); }
+
+  .divider { display: flex; align-items: center; gap: 12px; margin: 26px 0; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #334155; }
+  .btn-fis { width: 100%; background: transparent; color: #e2e8f0; border: 1px solid #334155; padding: 14px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: inherit; }
+  .btn-fis:hover { background: #1e293b; border-color: #16a34a; }
+  .fis-badge { display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 6px; background: linear-gradient(135deg, #22c55e 0%, #15803d 100%); font-size: 12px; color: white; font-weight: 700; }
+  .hint { color: #64748b; font-size: 12px; margin-top: 28px; line-height: 1.6; text-align: center; }
+  .error { background: #7f1d1d; color: #fecaca; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; border-left: 3px solid #ef4444; text-align: left; }
+  .success-box { background: #064e3b; color: #d1fae5; padding: 12px 16px; border-radius: 8px; font-size: 13px; margin-bottom: 18px; border-left: 3px solid #16a34a; text-align: left; }
+
+  /* Demo Inbox */
+  .demo-inbox {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px dashed #f59e0b;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 22px;
+    text-align: left;
+    position: relative;
+  }
+  .demo-inbox::before {
+    content: 'DEMO INBOX';
+    position: absolute;
+    top: -10px;
+    left: 16px;
+    background: #f59e0b;
+    color: #0f172a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 4px;
+  }
+  .demo-inbox .mail-from { color: #94a3b8; font-size: 12px; margin-bottom: 4px; }
+  .demo-inbox .mail-subject { color: #f1f5f9; font-size: 14px; font-weight: 700; margin-bottom: 12px; }
+  .demo-inbox .mail-body { color: #cbd5e1; font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+  .demo-inbox .code-display {
+    font-family: monospace;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: 6px;
+    color: #22c55e;
+    background: #0f172a;
+    border: 1px solid #334155;
+    padding: 12px 20px;
+    border-radius: 8px;
+    text-align: center;
+    cursor: pointer;
+    user-select: all;
+  }
+  .demo-inbox .code-hint { color: #64748b; font-size: 11px; margin-top: 8px; text-align: center; }
+
+  .consent-header { text-align: center; margin-bottom: 22px; }
+  .consent-icon { width: 64px; height: 64px; margin: 0 auto 18px; border-radius: 50%; background: rgba(34,197,94,0.15); border: 2px solid #22c55e; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .consent-header h1 { font-size: 22px; color: #f1f5f9; margin-bottom: 8px; }
+  .consent-header p { color: #94a3b8; font-size: 13px; line-height: 1.6; }
+  .consent-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 20px; margin-bottom: 18px; text-align: left; }
+  .consent-card h3 { font-size: 12px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; font-weight: 600; }
+  .consent-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #334155; font-size: 14px; gap: 12px; }
+  .consent-row:last-child { border-bottom: none; }
+  .consent-row .key { color: #94a3b8; flex-shrink: 0; }
+  .consent-row .val { color: #f1f5f9; font-weight: 600; text-align: right; word-break: break-word; }
+  .consent-row .val code { font-family: monospace; background: #0f172a; padding: 3px 8px; border-radius: 4px; color: #22c55e; }
+  .consent-scope { display: grid; gap: 10px; text-align: left; margin-bottom: 8px; }
+  .consent-scope .scope-item { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: #cbd5e1; }
+  .consent-scope .scope-item .tick { flex-shrink: 0; width: 18px; height: 18px; border-radius: 50%; background: #16a34a; color: white; font-size: 11px; display: flex; align-items: center; justify-content: center; margin-top: 1px; }
+  .loading-row { color: #64748b; font-size: 13px; padding: 10px 0; text-align: center; }
+
+  /* Dashboard */
+  .header { background: linear-gradient(135deg, #16a34a 0%, #15803d 100%); padding: 20px 40px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+  .header h1 { font-size: 22px; color: white; font-weight: 700; }
+  .header .right { display: flex; align-items: center; gap: 16px; }
+  .header .status { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 20px; font-size: 13px; color: white; display: flex; align-items: center; gap: 8px; }
+  .header .user { color: white; font-size: 13px; }
+  .header button.logout { background: rgba(255,255,255,0.15); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .header button.logout:hover { background: rgba(255,255,255,0.25); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 2s infinite; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 32px 40px; }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 32px; }
+  .stat-card { background: #1e293b; border-radius: 12px; padding: 24px; border-left: 4px solid #16a34a; }
+  .stat-card .label { font-size: 13px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .stat-card .value { font-size: 32px; font-weight: 700; color: #f1f5f9; }
+  .stat-card.warn { border-left-color: #f59e0b; }
+  .stat-card.success { border-left-color: #16a34a; }
+  .section { background: #1e293b; border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+  .section h2 { font-size: 16px; color: #cbd5e1; margin-bottom: 16px; text-transform: uppercase; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #334155; font-size: 14px; }
+  th { color: #94a3b8; font-weight: 600; font-size: 12px; text-transform: uppercase; }
+  tr:last-child td { border-bottom: none; }
+  .badge { padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
+  .badge.redeemed { background: #dcfce7; color: #166534; }
+  .badge.unredeemed { background: #fef3c7; color: #92400e; }
+  .badge.success { background: #dcfce7; color: #166534; }
+  .badge.failed { background: #fee2e2; color: #991b1b; }
+  .test-panel { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: center; }
+  .test-panel input { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; padding: 12px 16px; border-radius: 8px; font-size: 14px; width: 100%; font-family: inherit; }
+  .test-panel input:focus { outline: none; border-color: #16a34a; }
+  .test-panel button { background: #16a34a; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; }
+  .test-panel button:hover { background: #15803d; }
+  .test-panel button:disabled { background: #475569; cursor: not-allowed; }
+  .result { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 14px; font-family: monospace; white-space: pre-wrap; }
+  .result.success { background: #064e3b; color: #d1fae5; border-left: 4px solid #16a34a; }
+  .result.error { background: #7f1d1d; color: #fecaca; border-left: 4px solid #ef4444; }
+  .two-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .footer { text-align: center; padding: 24px; color: #64748b; font-size: 12px; }
+  .chart { display: flex; align-items: flex-end; justify-content: space-around; height: 220px; padding: 20px 0; border-bottom: 1px solid #334155; }
+  .bar-wrapper { display: flex; flex-direction: column; align-items: center; flex: 1; }
+  .bar-value { color: #f1f5f9; font-weight: 700; font-size: 20px; margin-bottom: 8px; }
+  .bar { width: 60%; background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%); border-radius: 6px 6px 0 0; transition: height 0.5s ease; min-height: 4px; }
+  .bar-label { color: #94a3b8; font-size: 13px; margin-top: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  @media (max-width: 900px) {
+    .login-page { grid-template-columns: 1fr; }
+    .login-left { display: none; }
+    .two-cols { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const { useState, useEffect, createElement: h } = React;
+
+function BrandingPanel() {
+  return h('div', { className: 'login-left' },
+    h('div', { className: 'visual-content' },
+      h('div', { className: 'visual-badge' }, h('span', { className: 'dot-g' }), 'Live Production System'),
+      h('div', { className: 'visual-icon' }, '🌾'),
+      h('h2', null, 'Securing Tanzania\'s Agricultural Subsidy Pipeline'),
+      h('p', { className: 'lede' }, 'BlockFarming verifies every bag of fertilizer from factory to farmer — combining blockchain security with USSD access for rural smallholder farmers.'),
+      h('ul', { className: 'feature-list' },
+        h('li', null, h('span', { className: 'check' }, '✓'), 'Cryptographic batch tagging at the factory'),
+        h('li', null, h('span', { className: 'check' }, '✓'), 'Real-time token verification over USSD'),
+        h('li', null, h('span', { className: 'check' }, '✓'), 'Automated subsidy payouts to agro-dealers'),
+        h('li', null, h('span', { className: 'check' }, '✓'), 'TFRA audit trail of every transaction')
+      ),
+      h('p', { className: 'attribution' }, 'Tanzania Fertilizer Regulatory Authority · Ministry of Agriculture')
+    )
+  );
+}
+
+/* ============ STEP 1: LOGIN (returning user OR FIS) ============ */
+function LoginStep({ onReturningUser, onFisStart }) {
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  // Prefill from localStorage if a previous account exists
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('bf_account');
+      if (saved) {
+        const acc = JSON.parse(saved);
+        setIdentifier(acc.email || '');
+      }
+    } catch (e) {}
+  }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!identifier || !password) { setError('Please enter your email and password.'); return; }
+    setLoading(true);
+    try {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: identifier, password })
+      });
+      const data = await r.json();
+      if (!r.ok) { setError(data.error || 'Login failed.'); setLoading(false); return; }
+      onReturningUser({ email: data.user.email, fis_linked: data.user.fis_linked });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  return h('div', { className: 'login-right' },
+    h('div', { className: 'login-form-wrap' },
+      h('div', { className: 'login-logo' }, '🌾'),
+      h('h1', null, 'Welcome back'),
+      h('p', { className: 'subtitle' }, 'Sign in to the BlockFarming Regulator Portal'),
+      error && h('div', { className: 'error' }, error),
+      h('form', { onSubmit: submit },
+        h('div', { className: 'field' },
+          h('label', null, 'Email'),
+          h('input', { type: 'text', value: identifier, onChange: e => setIdentifier(e.target.value), placeholder: 'tfra.officer@example.go.tz' })
+        ),
+        h('div', { className: 'field' },
+          h('label', null, 'Password'),
+          h('input', { type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: '••••••••' })
+        ),
+        h('button', { className: 'btn-primary', type: 'submit', disabled: loading }, loading ? 'Signing in…' : 'Sign In')
+      ),
+      h('div', { className: 'divider' }, 'or'),
+      h('button', { className: 'btn-fis', onClick: onFisStart, disabled: loading },
+        h('span', { className: 'fis-badge' }, 'FIS'),
+        'Continue with Fertilizer Information System'
+      ),
+      h('p', { className: 'hint' }, 'First time here? Use FIS to create your account.')
+    )
+  );
+}
+
+/* ============ STEP 2: FIS CREDENTIALS ============ */
+function FisCredentialsStep({ onBack, onSent }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!email || !password) { setError('Please enter your FIS email and password.'); return; }
+    setLoading(true);
+    try {
+      const r = await fetch('/api/fis/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+      const data = await r.json();
+      if (!r.ok) { setError(data.error || 'FIS authentication failed.'); setLoading(false); return; }
+      onSent({ email, password, demoToken: data.demo_token });
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  return h('div', { className: 'login-right' },
+    h('div', { className: 'login-form-wrap' },
+      h('div', { className: 'login-logo' }, '🏛️'),
+      h('h1', null, 'Sign in with FIS'),
+      h('p', { className: 'subtitle' }, 'Use your Fertilizer Information System credentials. We will email you a 6-character code to verify.'),
+      error && h('div', { className: 'error' }, error),
+      h('form', { onSubmit: submit },
+        h('div', { className: 'field' },
+          h('label', null, 'FIS Email'),
+          h('input', { type: 'text', value: email, onChange: e => setEmail(e.target.value), placeholder: 'you@fis.go.tz' })
+        ),
+        h('div', { className: 'field' },
+          h('label', null, 'FIS Password'),
+          h('input', { type: 'password', value: password, onChange: e => setPassword(e.target.value), placeholder: '••••••••' })
+        ),
+        h('button', { className: 'btn-primary', type: 'submit', disabled: loading }, loading ? 'Contacting FIS…' : 'Send code to my email')
+      ),
+      h('button', { className: 'btn-secondary', onClick: onBack, disabled: loading }, 'Back to sign in')
+    )
+  );
+}
+
+/* ============ STEP 3: VERIFY EMAIL TOKEN ============ */
+function TokenStep({ email, password, demoToken, onVerified, onBack }) {
+  const [code, setCode] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const hexRegex = /^[0-9A-Fa-f]{6}$/;
+
+  const verify = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!hexRegex.test(code)) { setError('Code must be 6 hexadecimal characters.'); return; }
+    setLoading(true);
+    try {
+      const r = await fetch('/api/fis/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token_code: code })
+      });
+      const data = await r.json();
+      if (!r.ok) { setError(data.error || 'Verification failed.'); setLoading(false); return; }
+      onVerified(code.toUpperCase());
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
+  };
+
+  return h('div', { className: 'login-right' },
+    h('div', { className: 'login-form-wrap' },
+      h('div', { className: 'login-logo' }, '📧'),
+      h('h1', null, 'Check your email'),
+      h('p', { className: 'subtitle' }, 'A 6-character verification code was sent to ' + email),
+      h('div', { className: 'demo-inbox' },
+        h('div', { className: 'mail-from' }, 'From: no-reply@fis.go.tz'),
+        h('div', { className: 'mail-subject' }, 'Your BlockFarming verification code'),
+        h('div', { className: 'mail-body' }, 'Use the code below to verify your account. It expires in 10 minutes.'),
+        h('div', { className: 'code-display' }, demoToken),
+        h('div', { className: 'code-hint' }, 'Tap to select the code, then paste it below')
+      ),
+      error && h('div', { className: 'error' }, error),
+      h('form', { onSubmit: verify },
+        h('div', { className: 'field' },
+          h('label', null, 'Verification code'),
+          h('input', {
+            type: 'text',
+            className: 'code-input',
+            value: code,
+            maxLength: 6,
+            onChange: e => setCode(e.target.value.replace(/[^0-9A-Fa-f]/g, '').toUpperCase()),
+            placeholder: '••••••',
+            autoFocus: true
+          })
+        ),
+        h('button', { className: 'btn-primary', type: 'submit', disabled: loading || !hexRegex.test(code) },
+          loading ? 'Verifying…' : 'Verify code'
+        )
+      ),
+      h('button', { className: 'btn-secondary', onClick: onBack, disabled: loading }, 'Back')
+    )
+  );
+}
+
+/* ============ STEP 4: CONSENT ============ */
+function ConsentStep({ token, email, onAuthorize, onDeny }) {
+  const [loading, setLoading] = useState(false);
+  const [batch, setBatch] = useState(null);
+  const [fetchError, setFetchError] = useState('');
+
+  useEffect(() => {
+    fetch('/api/batch/' + token)
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) setFetchError(data.error);
+        else setBatch(data);
+      })
+      .catch(e => setFetchError(e.message));
+  }, [token]);
+
+  const authorize = () => { setLoading(true); setTimeout(() => onAuthorize(), 400); };
+
+  return h('div', { className: 'login-right' },
+    h('div', { className: 'login-form-wrap' },
+      h('div', { className: 'consent-header' },
+        h('div', { className: 'consent-icon' }, '🛡️'),
+        h('h1', null, 'Authorize data access'),
+        h('p', null, 'Review the fertilizer batch record that will be transferred from FIS into BlockFarming.')
+      ),
+      h('div', { className: 'consent-card' },
+        h('h3', null, 'FIS record for ' + email),
+        !batch && !fetchError && h('div', { className: 'loading-row' }, 'Loading record…'),
+        fetchError && h('div', { className: 'error' }, fetchError),
+        batch && h('div', null,
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Token'), h('span', { className: 'val' }, h('code', null, batch.token_code))),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Batch ID'), h('span', { className: 'val' }, batch.batch_id)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Product'), h('span', { className: 'val' }, batch.product_name)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Manufacturer'), h('span', { className: 'val' }, batch.manufacturer)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Composition'), h('span', { className: 'val' }, batch.chemical_composition)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Manufactured'), h('span', { className: 'val' }, batch.manufacture_date)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Expires'), h('span', { className: 'val' }, batch.expiry_date)),
+          h('div', { className: 'consent-row' }, h('span', { className: 'key' }, 'Status'), h('span', { className: 'val' }, batch.status))
+        )
+      ),
+      h('div', { className: 'consent-card' },
+        h('h3', null, 'You are granting access to'),
+        h('div', { className: 'consent-scope' },
+          h('div', { className: 'scope-item' }, h('span', { className: 'tick' }, '✓'), 'Import the batch record above into BlockFarming'),
+          h('div', { className: 'scope-item' }, h('span', { className: 'tick' }, '✓'), 'Log this authorization for audit'),
+          h('div', { className: 'scope-item' }, h('span', { className: 'tick' }, '✓'), 'Create a BlockFarming account for ' + email)
+        )
+      ),
+      h('button', { className: 'btn-primary', onClick: authorize, disabled: loading || !batch },
+        loading ? 'Authorizing…' : 'Authorize & continue'
+      ),
+      h('button', { className: 'btn-danger', onClick: onDeny, disabled: loading }, 'Deny')
+    )
+  );
+}
+
+/* ============ DASHBOARD ============ */
+function Dashboard({ user, onLogout }) {
+  const [stats, setStats] = useState(null);
+  const [recent, setRecent] = useState({ sessions: [], tokens: [] });
+  const [tokenCode, setTokenCode] = useState('A1B2C3');
+  const [phone, setPhone] = useState('255712345678');
+  const [result, setResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState('');
+
+  const fetchData = async () => {
+    try {
+      const [s, r] = await Promise.all([fetch('/api/stats').then(x => x.json()), fetch('/api/recent').then(x => x.json())]);
+      setStats(s); setRecent(r); setLastUpdate(new Date().toLocaleTimeString());
+    } catch (e) {}
+  };
+  useEffect(() => { fetchData(); const id = setInterval(fetchData, 5000); return () => clearInterval(id); }, []);
+
+  const validate = async () => {
+    setLoading(true); setResult(null);
+    try {
+      const r = await fetch('/api/validate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ token_code: tokenCode, phone_number: phone }) });
+      const data = await r.json();
+      setResult(data); fetchData();
+    } catch (e) { setResult({ error: e.message }); }
+    setLoading(false);
+  };
+
+  const chartBars = stats ? [
+    { name: 'Unredeemed', value: parseInt(stats.tokens.unredeemed) },
+    { name: 'Redeemed', value: parseInt(stats.tokens.redeemed) },
+    { name: 'Sessions', value: parseInt(stats.sessions.total_sessions) },
+    { name: 'Transactions', value: parseInt(stats.transactions.total_transactions) }
+  ] : [];
+  const maxValue = Math.max(1, ...chartBars.map(b => b.value));
+
+  return h('div', null,
+    h('div', { className: 'header' },
+      h('h1', null, 'BlockFarming Dashboard'),
+      h('div', { className: 'right' },
+        h('div', { className: 'status' }, h('span', { className: 'dot' }), 'Live — ' + lastUpdate),
+        h('div', { className: 'user' }, user.email),
+        h('button', { className: 'logout', onClick: onLogout }, 'Sign out')
+      )
+    ),
+    h('div', { className: 'container' },
+      h('div', { className: 'stats-grid' },
+        h('div', { className: 'stat-card' }, h('div', { className: 'label' }, 'Total Tokens'), h('div', { className: 'value' }, stats ? stats.tokens.total : '–')),
+        h('div', { className: 'stat-card warn' }, h('div', { className: 'label' }, 'Unredeemed'), h('div', { className: 'value' }, stats ? stats.tokens.unredeemed : '–')),
+        h('div', { className: 'stat-card success' }, h('div', { className: 'label' }, 'Redeemed'), h('div', { className: 'value' }, stats ? stats.tokens.redeemed : '–')),
+        h('div', { className: 'stat-card' }, h('div', { className: 'label' }, 'Subsidy Paid (TZS)'), h('div', { className: 'value' }, stats ? Number(stats.transactions.total_amount).toLocaleString() : '–'))
+      ),
+      h('div', { className: 'section' }, h('h2', null, 'System Overview'),
+        h('div', { className: 'chart' }, chartBars.map((b, i) =>
+          h('div', { key: i, className: 'bar-wrapper' },
+            h('div', { className: 'bar-value' }, b.value),
+            h('div', { className: 'bar', style: { height: Math.max(4, (b.value / maxValue) * 160) + 'px' } }),
+            h('div', { className: 'bar-label' }, b.name)
+          )
+        ))
+      ),
+      h('div', { className: 'section' }, h('h2', null, 'Live Token Verification (USSD Simulator)'),
+        h('div', { className: 'test-panel' },
+          h('input', { type: 'text', value: tokenCode, onChange: e => setTokenCode(e.target.value.toUpperCase()), placeholder: 'Token code', maxLength: 12 }),
+          h('input', { type: 'text', value: phone, onChange: e => setPhone(e.target.value), placeholder: 'Dealer phone' }),
+          h('button', { onClick: validate, disabled: loading || !tokenCode }, loading ? 'Verifying…' : 'Validate Token')
+        ),
+        result && h('div', { className: 'result ' + (result.valid ? 'success' : 'error') }, JSON.stringify(result, null, 2))
+      ),
+      h('div', { className: 'two-cols' },
+        h('div', { className: 'section' }, h('h2', null, 'Recent USSD Sessions'),
+          h('table', null,
+            h('thead', null, h('tr', null, h('th', null, 'Phone'), h('th', null, 'Token'), h('th', null, 'Status'), h('th', null, 'Time'))),
+            h('tbody', null,
+              recent.sessions.length === 0
+                ? h('tr', null, h('td', { colSpan: 4, style: { color: '#64748b', textAlign: 'center', padding: 24 } }, 'No sessions yet'))
+                : recent.sessions.map(s => h('tr', { key: s.session_id },
+                    h('td', null, s.phone_number),
+                    h('td', null, h('code', null, s.token_code)),
+                    h('td', null, h('span', { className: 'badge ' + (s.session_status === 'SUCCESS' ? 'success' : 'failed') }, s.session_status)),
+                    h('td', null, new Date(s.created_at).toLocaleTimeString())
+                  ))
+            )
+          )
+        ),
+        h('div', { className: 'section' }, h('h2', null, 'Token Registry'),
+          h('table', null,
+            h('thead', null, h('tr', null, h('th', null, 'Token'), h('th', null, 'Batch'), h('th', null, 'Status'))),
+            h('tbody', null,
+              recent.tokens.map(t => h('tr', { key: t.token_code },
+                h('td', null, h('code', null, t.token_code)),
+                h('td', null, t.batch_id),
+                h('td', null, h('span', { className: 'badge ' + (t.status === 'REDEEMED' ? 'redeemed' : 'unredeemed') }, t.status))
+              ))
+            )
+          )
+        )
+      ),
+      h('div', { className: 'footer' }, 'BlockFarming — Securing Tanzania\'s Agricultural Subsidy Pipeline')
+    )
+  );
+}
+
+/* ============ APP ============ */
+function App() {
+  const [step, setStep] = useState('login');
+  const [user, setUser] = useState(null);
+  const [fisEmail, setFisEmail] = useState('');
+  const [fisPassword, setFisPassword] = useState('');
+  const [demoToken, setDemoToken] = useState('');
+  const [verifiedToken, setVerifiedToken] = useState('');
+  const [loggedIn, setLoggedIn] = useState(false);
+
+  // Returning user (direct dashboard)
+  const handleReturningUser = (u) => { setUser(u); setLoggedIn(true); };
+
+  // FIS flow
+  const startFis = () => setStep('fis');
+  const fisBack = () => setStep('login');
+  const fisSent = ({ email, password, demoToken }) => {
+    setFisEmail(email);
+    setFisPassword(password);
+    setDemoToken(demoToken);
+    setStep('token');
+  };
+  const tokenBack = () => setStep('fis');
+  const tokenVerified = (code) => {
+    setVerifiedToken(code);
+    setStep('consent');
+  };
+
+  // Consent
+  const authorize = async () => {
+    // Create user account in DB
+    try {
+      await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: fisEmail, password: fisPassword, fis_linked: true })
+      });
+      // Store in localStorage for next visit
+      localStorage.setItem('bf_account', JSON.stringify({ email: fisEmail, linked: true }));
+    } catch (e) { console.error(e); }
+    setUser({ email: fisEmail, fis_linked: true });
+    setLoggedIn(true);
+  };
+  const deny = () => {
+    setFisEmail(''); setFisPassword(''); setDemoToken(''); setVerifiedToken('');
+    setStep('login');
+  };
+
+  const logout = () => {
+    setUser(null);
+    setLoggedIn(false);
+    setStep('login');
+  };
+
+  if (loggedIn) return h(Dashboard, { user, onLogout: logout });
+
+  return h('div', { className: 'login-page' },
+    h(BrandingPanel),
+    step === 'login' && h(LoginStep, { onReturningUser: handleReturningUser, onFisStart: startFis }),
+    step === 'fis' && h(FisCredentialsStep, { onBack: fisBack, onSent: fisSent }),
+    step === 'token' && h(TokenStep, { email: fisEmail, password: fisPassword, demoToken, onVerified: tokenVerified, onBack: tokenBack }),
+    step === 'consent' && h(ConsentStep, { token: demoToken, email: fisEmail, onAuthorize: authorize, onDeny: deny })
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>
